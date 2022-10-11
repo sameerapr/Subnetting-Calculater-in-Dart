@@ -1,0 +1,379 @@
+import 'dart:math';
+
+class NetworkAddress {
+  ConvertIpAddressToBinary iptobinary = ConvertIpAddressToBinary();
+  ConvertSubnetToBinary masktobinary = ConvertSubnetToBinary();
+  var a = 0;
+  var b = 0;
+  var networkOctate1 = [];
+  var broadcastOct1 = [];
+
+  String calculateNetworkAddress(List splitVal1, List splitVal2) {
+    networkOctate1 = [];
+
+    for (int i = 0; i < 4; i++) {
+      var octate1 = splitVal1[i];
+      var maskOctate1 = splitVal2[i];
+
+      List<String> st = octate1.split('');
+      List<String> sta = maskOctate1.split('');
+
+      List<int> numbers = st.map(int.parse).toList();
+      List<int> numbers2 = sta.map(int.parse).toList();
+
+      for (int i = 0; i < numbers.length; i++) {
+        a = numbers[i] & numbers2[i];
+
+        networkOctate1 += [a];
+      }
+      networkOctate1.add('.');
+    }
+    networkOctate1.removeAt(networkOctate1.length - 1);
+    return networkOctate1.join("");
+  }
+
+  findNetworkAddress() {
+    final ipBinaryIs = iptobinary.ipDivideToVariables();
+    final maskBinaryIs = masktobinary.subnetToBinary();
+
+    final split1 = ipBinaryIs.split('.');
+    final splita = maskBinaryIs.split('.');
+
+    final networkOctates1 = calculateNetworkAddress(split1, splita);
+    return networkOctates1;
+    //print("Network Address in Binary: $networkOctates1");
+  }
+
+  //network address decimal
+  networkAddressToDecimal() {
+    final networkAddressIs = NetworkAddress().findNetworkAddress();
+    var networktOctate1 = '';
+    String networktip = '';
+    final split1 = networkAddressIs.split('.');
+    for (int x = 0; x < 4; x++) {
+      networktOctate1 = split1[x];
+      var ip = int.parse(networktOctate1, radix: 2);
+      networktip += "$ip";
+      if (x != 3) {
+        networktip += ".";
+      }
+    }
+
+    return networktip;
+  }
+  //find broadcast address
+
+  String calculateBroadcastAddress(List splitVal1, List splitVal2) {
+    networkOctate1 = [];
+
+    for (int i = 0; i < 4; i++) {
+      var octate1 = splitVal1[i];
+      var netOctate1 = splitVal2[i];
+
+      List<String> st = octate1.split('');
+      List<String> sta = netOctate1.split('');
+
+      List<int> numbers = st.map(int.parse).toList();
+      List<int> numbers2 = sta.map(int.parse).toList();
+
+      for (int i = 0; i < numbers.length; i++) {
+        b = numbers[i] | numbers2[i];
+
+        broadcastOct1 += [b];
+      }
+      broadcastOct1.add('.');
+    }
+    broadcastOct1.removeAt(broadcastOct1.length - 1);
+    return broadcastOct1.join("");
+  }
+
+  findBroadcastAddress() {
+    final networkAddress = findNetworkAddress();
+    var subnetBinary = ConvertSubnetToBinary().subnetToBinary();
+
+    subnetBinary = subnetBinary.replaceAll('0', 'a');
+    subnetBinary = subnetBinary.replaceAll('1', '0');
+    subnetBinary = subnetBinary.replaceAll('a', '1');
+
+    final split = subnetBinary.split('.');
+    final split2 = networkAddress.split('.');
+
+    final broadcastOctates1 = calculateBroadcastAddress(split, split2);
+    return broadcastOctates1;
+  }
+
+  //broadcast address decimal
+  broadcastToDecimal() {
+    final broadcastAddressIs = NetworkAddress().findBroadcastAddress();
+    var broadcastOctate1 = '';
+    String broadcastip = '';
+    final split1 = broadcastAddressIs.split('.');
+    for (int x = 0; x < 4; x++) {
+      broadcastOctate1 = split1[x];
+      var ip = int.parse(broadcastOctate1, radix: 2);
+      broadcastip += "$ip";
+      if (x != 3) {
+        broadcastip += ".";
+      }
+    }
+    return broadcastip;
+  }
+
+  //split network address
+  splitNetwokAddress(int x) {
+    final networkAddres = NetworkAddress().networkAddressToDecimal();
+    final split = networkAddres.split('.');
+    for (x; x < 4; x++) {
+      split[x];
+
+      return split[x];
+    }
+  }
+
+  splitBroadcastddress(int x) {
+    final broadcastAddress = NetworkAddress().broadcastToDecimal();
+    final split = broadcastAddress.split('.');
+    for (x; x < 4; x++) {
+      split[x];
+
+      return split[x];
+    }
+  }
+  //find ip range
+
+  findIpRange() {
+    var cidrIs = ConvertIpAddressToBinary().cidr;
+    if (cidrIs == 31 || cidrIs == 32) {
+      print("-");
+    } else {
+      final networkOcte1 = splitNetwokAddress(0);
+      final networkOcte2 = splitNetwokAddress(1);
+      final networkOcte3 = splitNetwokAddress(2);
+      final networkOcte4 = int.parse(splitNetwokAddress(2)) + 1;
+
+      final broadcastOctet1 = splitBroadcastddress(0);
+      final broadcastOctet2 = splitBroadcastddress(1);
+      final broadcastOctet3 = splitBroadcastddress(2);
+      final broadcastOctet4 = int.parse(splitBroadcastddress(2)) - 1;
+      print(
+          "$networkOcte1.$networkOcte2.$networkOcte3.$networkOcte4 - $broadcastOctet1.$broadcastOctet2.$broadcastOctet3.$broadcastOctet4");
+    }
+  }
+
+  //find number of host
+  findNumberofHost() {
+    var cidrIs = ConvertIpAddressToBinary().cidr;
+    int numHost = 32 - cidrIs;
+    if (numHost != 0) {
+      var answer = pow(2, numHost) - 2;
+      print("Number of host : $answer");
+    }
+  }
+}
+
+class ConvertSubnetToBinary extends ConvertIpAddressToBinary {
+  //subnet binary value
+  var mask = "";
+
+  String convertSubnetToBinary(int octate) {
+    String binary = "";
+
+    final octate1binaryNumber = octate.toRadixString(2);
+    if (octate1binaryNumber.length < 8) {
+      int n = 8 - octate1binaryNumber.length;
+      for (int i = 0; i < n; i++) {
+        binary += "0";
+      }
+    }
+    binary += octate1binaryNumber;
+    return binary;
+  }
+
+  String subnetToBinary() {
+    mask = getSubnetMask();
+    final split = mask.split('.');
+    int octate1 = int.parse(split[0]);
+    int octate2 = int.parse(split[1]);
+    int octate3 = int.parse(split[2]);
+    int octate4 = int.parse(split[3]);
+    final octate1binaryNumber = convertSubnetToBinary(octate1);
+    final octate2binaryNumber = convertSubnetToBinary(octate2);
+    final octate3binaryNumber = convertSubnetToBinary(octate3);
+    final octate4binaryNumber = convertSubnetToBinary(octate4);
+    return ("$octate1binaryNumber.$octate2binaryNumber.$octate3binaryNumber.$octate4binaryNumber");
+  }
+}
+
+class ConvertIpAddressToBinary {
+  //ipaddress to binary
+  final ipAddress = "192.168.0.1";
+  final cidr = 15;
+  String ipDivideToVariables() {
+    final split = ipAddress.split('.');
+
+    var ipFirstNumber = int.parse(split[0]);
+    var ipSecondNumber = int.parse(split[1]);
+    var ipThirdNumber = int.parse(split[2]);
+    var ipFourthNumber = int.parse(split[3]);
+    var octate1binaryNumber = int.parse(ipFirstNumber.toRadixString(2));
+    var octate2binaryNumber = int.parse(ipSecondNumber.toRadixString(2));
+    var octate3binaryNumber = int.parse(ipThirdNumber.toRadixString(2));
+    var octate4binaryNumber = int.parse(ipFourthNumber.toRadixString(2));
+    var binaryOctate1 = octate1binaryNumber.toString().padLeft(8, '0');
+    var binaryOctate2 = octate2binaryNumber.toString().padLeft(8, '0');
+    var binaryOctate3 = octate3binaryNumber.toString().padLeft(8, '0');
+    var binaryOctate4 = octate4binaryNumber.toString().padLeft(8, '0');
+    return ("$binaryOctate1.$binaryOctate2.$binaryOctate3.$binaryOctate4");
+  }
+
+  int findIpClass() {
+    var findFirstNumber = ConvertIpAddressToBinary().ipAddress;
+    final split = findFirstNumber.split('.');
+    var ipFirstNumber = int.parse(split[0]);
+    var ipClass = "";
+
+    if (ipFirstNumber >= 1 && ipFirstNumber <= 126) {
+      ipClass = "Class A";
+      print(ipClass);
+    } else if (ipFirstNumber == 127) {
+      ipClass = "Loopback Address";
+      print(ipClass);
+    } else if (ipFirstNumber >= 128 && ipFirstNumber <= 191) {
+      ipClass = "Class B";
+      print(ipClass);
+    } else if (ipFirstNumber >= 192 && ipFirstNumber <= 223) {
+      ipClass = "Class C";
+      print(ipClass);
+    } else if (ipFirstNumber >= 224 && ipFirstNumber <= 293) {
+      ipClass = "Class D";
+      print(ipClass);
+    } else if (ipFirstNumber >= 240 && ipFirstNumber <= 255) {
+      ipClass = "Class E";
+      print(ipClass);
+    }
+    return ipFirstNumber;
+  }
+
+  String getSubnetMask() {
+    var getCidr = ConvertIpAddressToBinary().cidr;
+    String mask = "";
+    switch (getCidr) {
+      case 1:
+        mask = "128.0.0.0";
+        break;
+      case 2:
+        mask = "192.0.0.0";
+        break;
+      case 3:
+        mask = "224.0.0.0";
+        break;
+      case 4:
+        mask = "240.0.0.0";
+        break;
+      case 5:
+        mask = "248.0.0.0";
+        break;
+      case 6:
+        mask = "252.0.0.0";
+        break;
+      case 7:
+        mask = "254.0.0.0";
+        break;
+      case 8:
+        mask = "255.0.0.0";
+        break;
+      case 9:
+        mask = "255.128.0.0";
+        break;
+      case 10:
+        mask = "255.192.0.0";
+        break;
+      case 11:
+        mask = "255.224.0.0";
+        break;
+      case 12:
+        mask = "255.240.0.0";
+        break;
+      case 13:
+        mask = "255.248.0.0";
+        break;
+      case 14:
+        mask = "255.252.0.0";
+        break;
+      case 15:
+        mask = "255.254.0.0";
+        break;
+      case 16:
+        mask = "255.255.0.0";
+        break;
+      case 17:
+        mask = "255.255.128.0";
+        break;
+      case 18:
+        mask = "255.255.192.0";
+        break;
+      case 19:
+        mask = "255.255.224.0";
+        break;
+      case 20:
+        mask = "255.255.240.0";
+        break;
+      case 21:
+        mask = "255.255.248.0";
+        break;
+      case 22:
+        mask = "255.255.252.0";
+        break;
+      case 23:
+        mask = "255.255.254.0";
+        break;
+      case 24:
+        mask = "255.255.255.0";
+        break;
+      case 25:
+        mask = "255.255.255.128";
+        break;
+      case 26:
+        mask = "255.255.255.192";
+        break;
+      case 27:
+        mask = "255.255.255.224";
+        break;
+      case 28:
+        mask = "255.255.255.240";
+        break;
+      case 29:
+        mask = "255.255.255.248";
+        break;
+      case 30:
+        mask = "255.255.255.252";
+        break;
+      case 31:
+        mask = "255.255.255.254";
+        break;
+      case 32:
+        mask = "255.255.255.255";
+        break;
+    }
+    return mask;
+  }
+}
+
+void main() {
+  ConvertIpAddressToBinary getIP = ConvertIpAddressToBinary();
+  ConvertSubnetToBinary maskbinary = ConvertSubnetToBinary();
+  NetworkAddress networkaddress = NetworkAddress();
+
+  print("IP Address: ${getIP.ipAddress}");
+  print("IP Binary: ${getIP.ipDivideToVariables()}");
+  getIP.findIpClass();
+  print("Subnet Mask: ${getIP.getSubnetMask()}");
+  print("Subnet Binary: ${maskbinary.subnetToBinary()}");
+  print("Network Address : ${networkaddress.networkAddressToDecimal()}");
+  print("Network Address in Binary: ${networkaddress.findNetworkAddress()}");
+  print("Broadcast Address : ${networkaddress.broadcastToDecimal()}");
+  print(
+      "Broadcast Address in Binary: ${networkaddress.findBroadcastAddress()}");
+  networkaddress.findIpRange();
+  networkaddress.findNumberofHost();
+}
